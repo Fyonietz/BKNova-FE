@@ -1,27 +1,31 @@
 @import "tailwindcss";
 @config "../tailwind.config.js";
 
-
 @layer base {
   :root {
     --background: 0 0% 100%;
-    --foreground: 222 20% 12%;
+    --foreground: 222 30% 15%;
     --card: 0 0% 100%;
-    --card-foreground: 222 20% 12%;
-    --primary: 222 47% 20%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 210 20% 96%;
-    --secondary-foreground: 222 20% 12%;
-    --muted: 210 20% 96%;
-    --muted-foreground: 215 15% 45%;
-    --accent: 210 20% 96%;
-    --accent-foreground: 222 20% 12%;
+    --card-foreground: 222 30% 15%;
+
+    /* Clean blue — primary brand color */
+    --primary: 217 91% 60%;
+    --primary-foreground: 0 0% 100%;
+
+    /* Soft blue-tinted background for secondary elements */
+    --secondary: 217 60% 97%;
+    --secondary-foreground: 217 91% 40%;
+
+    --muted: 217 30% 96%;
+    --muted-foreground: 220 15% 45%;
+    --accent: 217 60% 97%;
+    --accent-foreground: 217 91% 40%;
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 98%;
-    --border: 214 20% 90%;
-    --input: 214 20% 90%;
-    --ring: 222 47% 20%;
-    --radius: 0.5rem;
+    --border: 217 25% 90%;
+    --input: 217 25% 90%;
+    --ring: 217 91% 60%;
+    --radius: 1rem;
   }
 }
 

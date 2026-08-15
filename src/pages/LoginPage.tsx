@@ -28,9 +28,9 @@ interface LoginRequest {
 // ─────────────────────────────────────────────
 interface LoginResponse {
   token: string;
-  nama : string;
-  role : string;
-  refresh_Token : string;
+  nama: string;
+  role: string;
+  refresh_Token: string;
 }
 
 export default function LoginPage() {
@@ -56,7 +56,7 @@ export default function LoginPage() {
       // 3. THE ACTUAL API CALL
       // Change '/auth/login' to your real endpoint path.
       // ───────────────────────────────────────
-      const payload: LoginRequest = { nama, password };
+      const payload: LoginRequest = { Nama: nama, Password: password };
       const response = await api.post<LoginResponse>('/api/v1/auth/login', payload, {
         auth: false, // no token needed yet, we're logging in
       });
@@ -67,8 +67,11 @@ export default function LoginPage() {
       // ───────────────────────────────────────
       localStorage.setItem('token', response.token);
       localStorage.setItem('refresh_token', response.refresh_Token);
-
-      navigate('/dashboard');
+      if(response.role != "Admin"){
+        setError('Role Mismatch')
+        return
+      }
+      navigate("/admin/dashboard");
     } catch (err) {
       if (err instanceof ApiError) {
         setError(err.message || 'Login failed. Please try again.');
@@ -81,10 +84,19 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-secondary px-4">
-      <Card className="w-full max-w-sm">
-        <CardHeader>
-          <CardTitle>Welcome Back</CardTitle>
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-gradient-to-b from-secondary via-background to-background px-4">
+      {/* Decorative blobs */}
+      <div className="pointer-events-none absolute -top-24 -left-24 h-72 w-72 rounded-full bg-primary/20 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-24 -right-24 h-72 w-72 rounded-full bg-primary/10 blur-3xl" />
+
+      <Card className="relative w-full max-w-sm border-t-4 border-t-primary bg-card/95 backdrop-blur-sm shadow-2xl shadow-primary/20 ring-1 ring-primary/10">
+        <CardHeader className="items-center text-center">
+          <div className="mb-2 flex h-16 w-16 items-center justify-center overflow-hidden rounded-full shadow-lg shadow-primary/30">
+            <img src="/logo.jpeg" alt="Logo" className="h-full w-full object-cover" />
+          </div>
+          <CardTitle className="mt-6 mb-6"> 
+            Welcome To <br /> BK Nova!
+          </CardTitle>
           <CardDescription>Sign in to your account to continue</CardDescription>
         </CardHeader>
         <CardContent>
@@ -124,7 +136,11 @@ export default function LoginPage() {
               </div>
             </div>
 
-            <Button type="submit" className="w-full" isLoading={isLoading}>
+            <Button
+              type="submit"
+              className="w-full shadow-md shadow-primary/30"
+              isLoading={isLoading}
+            >
               Sign In
             </Button>
           </form>
