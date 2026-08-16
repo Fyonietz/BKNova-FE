@@ -7,7 +7,9 @@ import {
   TrendingUp,
   School,
   GraduationCap,
-  UserCheck
+  UserCheck,
+  Calendars,
+  Binoculars,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -41,6 +43,8 @@ export const sidebarItems: SidebarItem[] = [
     label: 'Academics',
     icon: School,
     children: [
+      { label: 'Tahun Ajaran', path: '/admin/dashboard/academics/tahun-ajaran', icon: Calendars },
+      { label: 'Jurusan', path: '/admin/dashboard/academics/jurusan', icon: Binoculars },
       { label: 'Kelas', path: '/admin/dashboard/academics/kelas', icon: School },
     ],
   },
