@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/Input';
 import { Label } from '@/components/ui/Label';
 import DataTable, { type Column } from '@/components/ui/DataTable';
 import Modal from '@/components/ui/Modal';
-import { Plus, Eye, EyeOff } from 'lucide-react';
+import { Plus, Eye, EyeOff, Upload } from 'lucide-react';
 
 // ─────────────────────────────────────────────
 // 1. ENTITY SHAPES
@@ -37,21 +37,21 @@ const columns: Column<Siswa>[] = [
   { key: 'nama', label: 'Nama' },
   { key: 'nis', label: 'NIS' },
   { key: 'nisn', label: 'NISN' },
-  { 
-    key: 'kelas', 
+  {
+    key: 'kelas',
     label: 'Kelas',
-    render: (row) => `${row.tingkat ? row.tingkat + ' ' : ''}${row.kelas}` 
+    render: (row) => `${row.tingkat ? row.tingkat + ' ' : ''}${row.kelas}`,
   },
-  { 
-    key: 'kelamin', 
+  {
+    key: 'kelamin',
     label: 'Kelamin',
-    render: (row) => (row.kelamin === 'Laki' ? 'Laki-Laki' : row.kelamin)
+    render: (row) => (row.kelamin === 'Laki' ? 'Laki-Laki' : row.kelamin),
   },
   { key: 'tempat_Tanggal_Lahir', label: 'TTL' },
 ];
 
 // ─────────────────────────────────────────────
-// 3. FORM STATE
+// 3. FORM STATE (Add/Edit)
 // ─────────────────────────────────────────────
 interface SiswaFormState {
   nama: string;
@@ -73,20 +73,53 @@ const emptyForm: SiswaFormState = {
   tempat_Tanggal_Lahir: '',
 };
 
+// ─────────────────────────────────────────────
+// 4. IMPORT SHAPES
+// ─────────────────────────────────────────────
+interface ImportRow {
+  Nama: string;
+  NISN: string;
+  NIS: string;
+  Kelamin: string;
+  Tempat_Tanggal_Lahir: string;
+}
+
+interface ImportFailed {
+  nama: string;
+  reason: string;
+}
+
+interface ImportResultType {
+  total: number;
+  success: number;
+  failed: ImportFailed[];
+}
+
 export default function SiswaPage() {
   const [siswa, setSiswa] = useState<Siswa[]>([]);
   const [kelasList, setKelasList] = useState<KelasOption[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Add/Edit modal state
   const [modalOpen, setModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<SiswaFormState>(emptyForm);
   const [isSaving, setIsSaving] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
+  // Import modal state
+  const [importModalOpen, setImportModalOpen] = useState(false);
+  const [importKelas, setImportKelas] = useState<number | ''>('');
+  const [importRows, setImportRows] = useState<ImportRow[]>([]);
+  const [importResult, setImportResult] = useState<ImportResultType | null>(null);
+  const [isImporting, setIsImporting] = useState(false);
+  const [importFileName, setImportFileName] = useState<string>('');
+  const [importPassword, setImportPassword] = useState('');
+  const [showImportPassword, setShowImportPassword] = useState(false);
+
   // ───────────────────────────────────────
-  // 4. FETCH DATA
+  // 5. FETCH DATA
   // ───────────────────────────────────────
   const fetchData = async () => {
     setIsLoading(true);
@@ -110,7 +143,7 @@ export default function SiswaPage() {
   }, []);
 
   // ───────────────────────────────────────
-  // 5. OPEN MODAL
+  // 6. ADD/EDIT MODAL HANDLERS
   // ───────────────────────────────────────
   const openAddModal = () => {
     setEditingId(null);
@@ -134,16 +167,12 @@ export default function SiswaPage() {
     setModalOpen(true);
   };
 
-  // ───────────────────────────────────────
-  // 6. SUBMIT FORM
-  // ───────────────────────────────────────
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSaving(true);
 
     try {
       if (editingId) {
-        // Payload PATCH (Flat object)
         const patchPayload: Record<string, any> = {
           Nama: form.nama,
           Nisn: form.nisn,
@@ -159,7 +188,6 @@ export default function SiswaPage() {
 
         await api.patch(`/api/v1/siswa/${editingId}`, patchPayload);
       } else {
-        // Payload POST (Nested object)
         const postPayload = {
           user: {
             Nama: form.nama,
@@ -186,9 +214,6 @@ export default function SiswaPage() {
     }
   };
 
-  // ───────────────────────────────────────
-  // 7. DELETE
-  // ───────────────────────────────────────
   const handleDelete = async (row: Siswa) => {
     if (!confirm(`Delete ${row.nama}?`)) return;
     try {
@@ -199,6 +224,79 @@ export default function SiswaPage() {
     }
   };
 
+  // ───────────────────────────────────────
+  // 7. IMPORT CSV HANDLERS
+  // ───────────────────────────────────────
+  const parseCsvFile = (file: File) => {
+    setImportFileName(file.name);
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const text = e.target?.result as string;
+      const lines = text
+        .replace(/\r/g, '')
+        .trim()
+        .split('\n')
+        .filter((l) => l.trim().length > 0);
+
+      if (lines.length < 2) {
+        setImportRows([]);
+        setError('File CSV kosong atau tidak punya data.');
+        return;
+      }
+
+      const headers = lines[0].split(',').map((h) => h.trim());
+
+      const rows: ImportRow[] = lines.slice(1).map((line) => {
+        const values = line.split(',').map((v) => v.trim());
+        const obj: Record<string, string> = {};
+        headers.forEach((h, i) => (obj[h] = values[i] ?? ''));
+        return {
+          Nama: obj.Nama || '',
+          NISN: obj.NISN || '',
+          NIS: obj.NIS || '',
+          Kelamin: obj.Kelamin || 'Laki',
+          Tempat_Tanggal_Lahir: obj.Tempat_Tanggal_Lahir || '',
+        };
+      });
+
+      setImportRows(rows);
+      setImportResult(null);
+      setError(null);
+    };
+    reader.readAsText(file);
+  };
+
+  const handleImport = async () => {
+    if (!importKelas || importRows.length === 0 || !importPassword) return;
+    setIsImporting(true);
+    setError(null);
+    try {
+      const res = await api.post<ImportResultType>('/api/v1/siswa/import', {
+        Id_Kelas: Number(importKelas),
+        Password: importPassword,
+        Data: importRows,
+      });
+      setImportResult(res);
+      if (res.failed.length === 0) {
+        fetchData();
+      }
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Gagal import CSV.');
+    } finally {
+      setIsImporting(false);
+    }
+  };
+
+  const closeImportModal = () => {
+    setImportModalOpen(false);
+    setImportKelas('');
+    setImportRows([]);
+    setImportResult(null);
+    setImportFileName('');
+    setImportPassword('');
+    setShowImportPassword(false);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -206,10 +304,16 @@ export default function SiswaPage() {
           <h2 className="text-2xl font-semibold">Siswa</h2>
           <p className="text-sm text-muted-foreground">Manage student records.</p>
         </div>
-        <Button onClick={openAddModal}>
-          <Plus className="mr-2 h-4 w-4" />
-          Add Siswa
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setImportModalOpen(true)}>
+            <Upload className="mr-2 h-4 w-4" />
+            Import CSV
+          </Button>
+          <Button onClick={openAddModal}>
+            <Plus className="mr-2 h-4 w-4" />
+            Add Siswa
+          </Button>
+        </div>
       </div>
 
       {error && (
@@ -227,6 +331,9 @@ export default function SiswaPage() {
         onDelete={handleDelete}
       />
 
+      {/* ─────────────────────────────────────────────
+          ADD / EDIT MODAL
+      ───────────────────────────────────────────── */}
       <Modal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
@@ -334,6 +441,126 @@ export default function SiswaPage() {
             {editingId ? 'Save Changes' : 'Create Siswa'}
           </Button>
         </form>
+      </Modal>
+
+      {/* ─────────────────────────────────────────────
+          IMPORT CSV MODAL
+      ───────────────────────────────────────────── */}
+      <Modal open={importModalOpen} onClose={closeImportModal} title="Import Siswa dari CSV">
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="import_kelas">1. Pilih Kelas Tujuan</Label>
+            <select
+              id="import_kelas"
+              value={importKelas}
+              onChange={(e) => setImportKelas(e.target.value ? Number(e.target.value) : '')}
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+            >
+              <option value="">-- Pilih Kelas --</option>
+              {kelasList.map((k) => (
+                <option key={k.id} value={k.id}>
+                  {k.tingkat} {k.nama} ({k.jurusan})
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="import_password">2. Password Default (untuk semua siswa)</Label>
+            <div className="relative">
+              <Input
+                id="import_password"
+                type={showImportPassword ? 'text' : 'password'}
+                value={importPassword}
+                onChange={(e) => setImportPassword(e.target.value)}
+                placeholder="Contoh: siswa123"
+                className="pr-10"
+              />
+              <button
+                type="button"
+                onClick={() => setShowImportPassword(!showImportPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground focus:outline-none"
+              >
+                {showImportPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Semua siswa di batch ini akan pakai password yang sama — sarankan mereka ganti setelah login pertama.
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="import_file">3. Upload File CSV</Label>
+            <input
+              id="import_file"
+              type="file"
+              accept=".csv"
+              disabled={!importKelas}
+              onChange={(e) => e.target.files?.[0] && parseCsvFile(e.target.files[0])}
+              className="w-full text-sm text-muted-foreground file:mr-3 file:rounded-md file:border-0 file:bg-primary file:px-3 file:py-2 file:text-sm file:font-medium file:text-primary-foreground disabled:opacity-50"
+            />
+            <p className="text-xs text-muted-foreground">
+              Format kolom (baris pertama header): Nama, NISN, NIS, Kelamin, Tempat_Tanggal_Lahir
+            </p>
+          </div>
+
+          {importRows.length > 0 && !importResult && (
+            <div className="rounded-md border p-3 text-sm">
+              <p className="font-medium">
+                {importFileName}: {importRows.length} baris siap diimport
+              </p>
+              <ul className="mt-2 max-h-32 space-y-0.5 overflow-y-auto text-xs text-muted-foreground">
+                {importRows.slice(0, 5).map((r, i) => (
+                  <li key={i}>
+                    {r.Nama} — NISN: {r.NISN}
+                  </li>
+                ))}
+                {importRows.length > 5 && <li>...dan {importRows.length - 5} lainnya</li>}
+              </ul>
+            </div>
+          )}
+
+          {importResult && (
+            <div className="space-y-2 rounded-md border p-3 text-sm">
+              <p>
+                Berhasil:{' '}
+                <span className="font-medium text-green-600">{importResult.success}</span> /{' '}
+                {importResult.total}
+              </p>
+              {importResult.failed.length > 0 && (
+                <div>
+                  <p className="font-medium text-destructive">
+                    Gagal ({importResult.failed.length}):
+                  </p>
+                  <ul className="mt-1 max-h-32 space-y-0.5 overflow-y-auto text-xs">
+                    {importResult.failed.map((f, i) => (
+                      <li key={i}>
+                        {f.nama}: {f.reason}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
+
+          <div className="flex gap-2">
+            {importResult ? (
+              <Button className="w-full" onClick={closeImportModal}>
+                Selesai
+              </Button>
+            ) : (
+              <Button
+                className="w-full"
+                onClick={handleImport}
+                isLoading={isImporting}
+                disabled={!importKelas || !importPassword || importRows.length === 0}
+              >
+                Import {importRows.length > 0 ? `(${importRows.length} siswa)` : ''}
+              </Button>
+            )}
+          </div>
+        </div>
       </Modal>
     </div>
   );
