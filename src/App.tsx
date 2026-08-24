@@ -8,6 +8,7 @@ import DashboardLayout from '@/components/layout/DashboardLayout'
 import SiswaDashboard from '@/pages/User/SiswaPage'
 import WaliMuridDashboard from '@/pages/User/WaliMuridPage'
 import GuruBKDashboard from '@/pages/User/GuruBKPage'
+import RiwayatKelasSiswaDashboard from '@/pages/User/RiwayatKelasPage'
 
 //Academics
 import KelasDashboard from '@/pages/Academics/KelasPage'
@@ -28,6 +29,7 @@ export default function App() {
               <Route path="users/siswa" element={<SiswaDashboard />} />
               <Route path="users/wali-murid" element={<WaliMuridDashboard />} />
               <Route path="users/guru-bk" element={<GuruBKDashboard />} />
+              <Route path="users/riwayat-kelas-siswa" element={<RiwayatKelasSiswaDashboard />} />
               
               //Academics
               <Route path="academics/kelas" element={<KelasDashboard />} />

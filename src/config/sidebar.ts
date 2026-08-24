@@ -10,6 +10,7 @@ import {
   UserCheck,
   Calendars,
   Binoculars,
+  HistoryIcon,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -37,6 +38,7 @@ export const sidebarItems: SidebarItem[] = [
       { label: 'Siswa', path: '/admin/dashboard/users/siswa', icon: GraduationCap },
       { label: 'Wali Murid', path: '/admin/dashboard/users/wali-murid', icon: Users },
       { label: 'Guru BK', path: '/admin/dashboard/users/guru-bk', icon: UserCheck },
+      { label: 'Riwayat Kelas Siswa', path: '/admin/dashboard/users/riwayat-kelas-siswa', icon: HistoryIcon },
     ],
   },
   {

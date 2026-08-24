@@ -1,5 +1,6 @@
-// src/lib/api.ts
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+
+// Hapus variabel VITE_API_URL di .env, atau biarkan kosong agar selalu memakai dynamic host
+const BASE_URL = import.meta.env.VITE_API_URL || `http://localhost:3000`;
 
 interface ApiOptions extends RequestInit {
   auth?: boolean; // attach Bearer token, default true
