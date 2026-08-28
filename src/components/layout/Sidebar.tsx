@@ -1,7 +1,7 @@
 // src/components/layout/Sidebar.tsx
 import { useState } from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
-import { ChevronDown } from 'lucide-react';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { ChevronDown, LogOut } from 'lucide-react';
 import { sidebarItems, type SidebarItem } from '@/config/sidebar';
 import { cn } from '@/lib/utils';
 
@@ -9,6 +9,7 @@ function SidebarLink({ item, nested = false }: { item: SidebarItem; nested?: boo
   return (
     <NavLink
       to={item.path!}
+      end
       className={({ isActive }) =>
         cn(
           'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
@@ -57,6 +58,14 @@ function SidebarGroup({ item }: { item: SidebarItem }) {
 }
 
 export default function Sidebar() {
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('refresh_token');
+    navigate('/login', { replace: true });
+  };
+
   return (
     <aside className="flex h-screen w-64 flex-col border-r bg-card">
       <div className="flex h-16 items-center gap-2 border-b px-6">
@@ -66,7 +75,7 @@ export default function Sidebar() {
         <span className="font-semibold">BK Nova</span>
       </div>
 
-      <nav className="flex-1 space-y-1 p-3">
+      <nav className="flex-1 space-y-1 overflow-y-auto p-3">
         {sidebarItems.map((item) =>
           item.children ? (
             <SidebarGroup key={item.label} item={item} />
@@ -75,6 +84,16 @@ export default function Sidebar() {
           )
         )}
       </nav>
+
+      <div className="border-t p-3">
+        <button
+          onClick={handleLogout}
+          className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+        >
+          <LogOut className="h-4 w-4" />
+          Logout
+        </button>
+      </div>
     </aside>
   );
 }

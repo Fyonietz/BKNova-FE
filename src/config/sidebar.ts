@@ -22,13 +22,12 @@ export interface SidebarItem {
 }
 
 export const sidebarItems: SidebarItem[] = [
-  { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
+{ label: 'Dashboard', path: '/admin/dashboard', icon: LayoutDashboard },
   {
     label: 'Instrumen',
     icon: LineChart,
     children: [
-      { label: 'AUM', path: '/dashboard/instrumen/aum', icon: Wallet },
-      { label: 'NAV', path: '/dashboard/instrumen/nav', icon: TrendingUp },
+      { label: 'AUM', path: '/admin/dashboard/instrumen/aum', icon: Wallet },
     ],
   },
   {
@@ -36,7 +35,7 @@ export const sidebarItems: SidebarItem[] = [
     icon: Users,
     children: [
       { label: 'Siswa', path: '/admin/dashboard/users/siswa', icon: GraduationCap },
-      { label: 'Wali Murid', path: '/admin/dashboard/users/wali-murid', icon: Users },
+      // { label: 'Wali Murid', path: '/admin/dashboard/users/wali-murid', icon: Users },
       { label: 'Guru BK', path: '/admin/dashboard/users/guru-bk', icon: UserCheck },
       { label: 'Riwayat Kelas Siswa', path: '/admin/dashboard/users/riwayat-kelas-siswa', icon: HistoryIcon },
     ],

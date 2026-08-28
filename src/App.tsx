@@ -4,6 +4,9 @@ import LoginPage from '@/pages/LoginPage';
 import DashboardPage from '@/pages/DashboardMain'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 
+//Instrumen
+import AumPage from '@/pages/Instrumen/AumPage'
+
 //User 
 import SiswaDashboard from '@/pages/User/SiswaPage'
 import WaliMuridDashboard from '@/pages/User/WaliMuridPage'
@@ -20,11 +23,15 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         {/* Match exact path "/login" and render LoginPage */}
+        <Route path="/" element={<LoginPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route element={<ProtectedRoute />}>
+          
           <Route path="/admin/dashboard" element={<DashboardLayout />}>
               <Route index element={<DashboardPage />} />
-   
+              //Instrumen
+              <Route path="instrumen/aum" element={<AumPage />} />
+
               //User
               <Route path="users/siswa" element={<SiswaDashboard />} />
               <Route path="users/wali-murid" element={<WaliMuridDashboard />} />
@@ -39,7 +46,7 @@ export default function App() {
           </Route>
         </Route>
         {/* Catch-all route: Redirects any unknown URL back to "/" */}
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </BrowserRouter>
   );
