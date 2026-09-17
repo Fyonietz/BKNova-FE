@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/Label';
 import DataTable, { type Column } from '@/components/ui/DataTable';
 import Modal from '@/components/ui/Modal';
 import { Plus, Eye, EyeOff, Upload } from 'lucide-react';
+import type { PaginatedResponse } from '@/types/index';
 
 // ─────────────────────────────────────────────
 // 1. ENTITY SHAPES
@@ -98,6 +99,12 @@ interface ImportResultType {
 export default function SiswaPage() {
   const [siswa, setSiswa] = useState<Siswa[]>([]);
   const [kelasList, setKelasList] = useState<KelasOption[]>([]);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [totalItems, setTotalItems] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  const [hasNextPage, setHasNextPage] = useState(false);
+  const [hasPreviousPage, setHasPreviousPage] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -126,11 +133,16 @@ export default function SiswaPage() {
     setError(null);
     try {
       const [siswaRes, kelasRes] = await Promise.all([
-        api.get<Siswa[]>('/api/v1/siswa'),
+        api.getPaged<Siswa>('/api/v1/siswa/paged', { page, pageSize }),
         api.get<KelasOption[]>('/api/v1/kelas'),
       ]);
-      setSiswa(siswaRes);
+
+      setSiswa(siswaRes.data);
       setKelasList(kelasRes);
+      setTotalItems(siswaRes.totalItems);
+      setTotalPages(siswaRes.totalPages);
+      setHasNextPage(siswaRes.hasNextPage);
+      setHasPreviousPage(siswaRes.hasPreviousPage);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Failed to load data.');
     } finally {
@@ -140,7 +152,7 @@ export default function SiswaPage() {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [page, pageSize]);
 
   // ───────────────────────────────────────
   // 6. ADD/EDIT MODAL HANDLERS
@@ -329,7 +341,36 @@ export default function SiswaPage() {
         getRowId={(row) => row.id}
         onEdit={openEditModal}
         onDelete={handleDelete}
+        pageSize={pageSize}
+        searchPlaceholder="Cari siswa..."
       />
+
+      <div className="flex items-center justify-between gap-3 rounded-md border bg-muted/20 px-3 py-2 text-sm text-muted-foreground">
+        <span>
+          Halaman {page} / {totalPages} · {totalItems} data
+        </span>
+
+        <div className="flex items-center gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
+            disabled={!hasPreviousPage}
+          >
+            Prev
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => setPage((prev) => prev + 1)}
+            disabled={!hasNextPage}
+          >
+            Next
+          </Button>
+        </div>
+      </div>
 
       {/* ─────────────────────────────────────────────
           ADD / EDIT MODAL

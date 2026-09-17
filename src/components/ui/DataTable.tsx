@@ -1,11 +1,12 @@
 // src/components/ui/DataTable.tsx
+import { useMemo, useState } from 'react';
 import { Button } from '@/components/ui/Button';
-import { Pencil, Trash2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Pencil, Search, Trash2 } from 'lucide-react';
 
 export interface Column<T> {
   key: keyof T;
   label: string;
-  render?: (row: T) => React.ReactNode; // optional custom cell renderer
+  render?: (row: T) => React.ReactNode;
 }
 
 interface DataTableProps<T> {
@@ -15,6 +16,9 @@ interface DataTableProps<T> {
   onEdit?: (row: T) => void;
   onDelete?: (row: T) => void;
   getRowId: (row: T) => string | number;
+  searchPlaceholder?: string;
+  pageSize?: number;
+  pageSizeOptions?: number[];
 }
 
 export default function DataTable<T>({
@@ -24,56 +28,169 @@ export default function DataTable<T>({
   onEdit,
   onDelete,
   getRowId,
+  searchPlaceholder = 'Cari data...',
+  pageSize = 10,
+  pageSizeOptions = [5, 10, 20, 50],
 }: DataTableProps<T>) {
+  const [query, setQuery] = useState('');
+  const [rowsPerPage, setRowsPerPage] = useState(pageSize);
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const filteredData = useMemo(() => {
+    const normalizedQuery = query.trim().toLowerCase();
+    if (!normalizedQuery) return data;
+
+    return data.filter((row) =>
+      columns.some((column) => {
+        const value = row[column.key];
+
+        if (value === null || value === undefined) return false;
+        if (typeof value === 'object') {
+          return JSON.stringify(value).toLowerCase().includes(normalizedQuery);
+        }
+
+        return String(value).toLowerCase().includes(normalizedQuery);
+      })
+    );
+  }, [columns, data, query]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredData.length / rowsPerPage));
+  const currentPageSafe = Math.min(currentPage, totalPages);
+
+  const paginatedData = useMemo(() => {
+    const startIndex = (currentPageSafe - 1) * rowsPerPage;
+    return filteredData.slice(startIndex, startIndex + rowsPerPage);
+  }, [currentPageSafe, filteredData, rowsPerPage]);
+
+  const startItem = filteredData.length === 0 ? 0 : (currentPageSafe - 1) * rowsPerPage + 1;
+  const endItem = Math.min(currentPageSafe * rowsPerPage, filteredData.length);
+
   if (isLoading) {
     return <div className="py-10 text-center text-sm text-muted-foreground">Loading...</div>;
   }
 
-  if (data.length === 0) {
-    return <div className="py-10 text-center text-sm text-muted-foreground">No data found.</div>;
-  }
-
   return (
-    <div className="overflow-x-auto rounded-lg border">
-      <table className="w-full text-sm">
-        <thead className="bg-muted/50">
-          <tr>
-            {columns.map((col) => (
-              <th key={String(col.key)} className="px-4 py-3 text-left font-medium">
-                {col.label}
-              </th>
+    <div className="overflow-hidden rounded-lg border bg-white">
+      <div className="flex flex-col gap-3 border-b bg-muted/20 p-3 sm:flex-row sm:items-center sm:justify-between">
+        <label className="relative block w-full sm:max-w-sm">
+          <span className="sr-only">Cari data</span>
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <input
+            aria-label="Cari data"
+            type="search"
+            value={query}
+            onChange={(e) => {
+              setQuery(e.target.value);
+              setCurrentPage(1);
+            }}
+            placeholder={searchPlaceholder}
+            className="w-full rounded-md border border-input bg-background py-2 pl-9 pr-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          />
+        </label>
+
+        <label className="flex items-center gap-2 text-sm text-muted-foreground">
+          <span>Baris per halaman</span>
+          <select
+            aria-label="Baris per halaman"
+            value={rowsPerPage}
+            onChange={(e) => {
+              setRowsPerPage(Number(e.target.value));
+              setCurrentPage(1);
+            }}
+            className="rounded-md border border-input bg-background px-2 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            {pageSizeOptions.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
             ))}
-            {(onEdit || onDelete) && (
-              <th className="px-4 py-3 text-right font-medium">Actions</th>
-            )}
-          </tr>
-        </thead>
-        <tbody className="divide-y">
-          {data.map((row) => (
-            <tr key={getRowId(row)} className="hover:bg-muted/30">
-              {columns.map((col) => (
-                <td key={String(col.key)} className="px-4 py-3">
-                  {col.render ? col.render(row) : String(row[col.key] ?? '')}
-                </td>
-              ))}
-              {(onEdit || onDelete) && (
-                <td className="px-4 py-3 text-right space-x-1">
-                  {onEdit && (
-                    <Button variant="ghost" size="icon" onClick={() => onEdit(row)}>
-                      <Pencil className="h-4 w-4" />
-                    </Button>
+          </select>
+        </label>
+      </div>
+
+      {filteredData.length === 0 ? (
+        <div className="py-10 text-center text-sm text-muted-foreground">
+          {query ? 'Tidak ada data yang cocok dengan pencarian.' : 'No data found.'}
+        </div>
+      ) : (
+        <>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-muted/50">
+                <tr>
+                  {columns.map((col) => (
+                    <th key={String(col.key)} className="px-4 py-3 text-left font-medium">
+                      {col.label}
+                    </th>
+                  ))}
+                  {(onEdit || onDelete) && (
+                    <th className="px-4 py-3 text-right font-medium">Actions</th>
                   )}
-                  {onDelete && (
-                    <Button variant="ghost" size="icon" onClick={() => onDelete(row)}>
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
-                  )}
-                </td>
-              )}
-            </tr>
-          ))}
-        </tbody>
-      </table>
+                </tr>
+              </thead>
+              <tbody className="divide-y">
+                {paginatedData.map((row) => (
+                  <tr key={String(getRowId(row))} className="hover:bg-muted/30">
+                    {columns.map((col) => (
+                      <td key={String(col.key)} className="px-4 py-3 align-top">
+                        {col.render ? col.render(row) : String(row[col.key] ?? '')}
+                      </td>
+                    ))}
+                    {(onEdit || onDelete) && (
+                      <td className="space-x-1 px-4 py-3 text-right">
+                        {onEdit && (
+                          <Button variant="ghost" size="icon" onClick={() => onEdit(row)} aria-label={`Edit ${String(getRowId(row))}`}>
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                        )}
+                        {onDelete && (
+                          <Button variant="ghost" size="icon" onClick={() => onDelete(row)} aria-label={`Hapus ${String(getRowId(row))}`}>
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        )}
+                      </td>
+                    )}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="flex flex-col gap-3 border-t bg-muted/20 px-3 py-3 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm text-muted-foreground" aria-live="polite">
+              Menampilkan {startItem}-{endItem} dari {filteredData.length} data
+            </p>
+
+            <div className="flex items-center gap-2" role="navigation" aria-label="Navigasi halaman tabel">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                disabled={currentPageSafe === 1}
+                aria-label="Halaman sebelumnya"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+
+              <span className="min-w-24 text-center text-sm font-medium text-muted-foreground" aria-live="polite">
+                Halaman {currentPageSafe} / {totalPages}
+              </span>
+
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                disabled={currentPageSafe === totalPages}
+                aria-label="Halaman berikutnya"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }
