@@ -124,7 +124,7 @@ export default function DashboardMain() {
   ];
 
   return (
-    <div className="space-y-4 h-[calc(100vh-5rem)] flex flex-col justify-between overflow-hidden pb-2">
+    <div className="flex flex-col gap-6 pb-6">
       {error && (
         <div className="rounded-md bg-destructive/10 px-3 py-1.5 text-xs text-destructive shrink-0">
           {error}
@@ -132,7 +132,7 @@ export default function DashboardMain() {
       )}
 
       {/* Prominent Welcome Banner (Compact) */}
-      <div className="relative overflow-hidden rounded-xl bg-primary px-6 py-4 text-primary-foreground shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 shrink-0">
+      <div className="relative overflow-hidden rounded-xl bg-primary px-6 py-4 text-primary-foreground shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="space-y-1 z-10">
           <div className="inline-flex items-center gap-1 rounded-full bg-primary-foreground/10 px-2.5 py-0.5 text-[11px] font-medium border border-primary-foreground/20">
             <ShieldCheck className="h-3 w-3" />
@@ -147,7 +147,7 @@ export default function DashboardMain() {
         </div>
 
         {/* Status Sistem Badge */}
-        <div className="z-10 shrink-0">
+        <div className="z-10 shrink-0 self-start sm:self-auto">
           <div className="flex items-center gap-2.5 rounded-lg bg-card/10 px-3.5 py-2 backdrop-blur-md border border-primary-foreground/15">
             <div className="space-y-0.5">
               <div className="text-[9px] uppercase tracking-wider text-primary-foreground/70 font-semibold">
@@ -165,11 +165,11 @@ export default function DashboardMain() {
         </div>
       </div>
 
-      {/* Stat Cards Grid (Compact) */}
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 shrink-0">
+      {/* Stat Cards Grid (Mobile: 1 col, Tablet: 2 cols, Desktop: 4 cols) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         {stats.map((stat) => (
           <Link key={stat.label} to={stat.path} className="block group">
-            <Card className="transition-all hover:shadow-sm py-1">
+            <Card className="transition-all hover:shadow-sm py-1 h-full">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 pt-3 px-4">
                 <div className="p-1.5 rounded-md bg-primary/10 text-primary">
                   <stat.icon className="h-3.5 w-3.5" />
@@ -187,19 +187,19 @@ export default function DashboardMain() {
         ))}
       </div>
 
-      {/* Main Content Grid: Quick Actions & Live Setup Flow (Compact Grid) */}
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3 flex-1 min-h-0">
+      {/* Main Content Grid: Quick Actions & Live Setup Flow */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         
         {/* Aksi & Pintasan Cepat (2 Columns) */}
-        <div className="lg:col-span-2 flex flex-col min-h-0">
+        <div className="lg:col-span-2">
           <Card className="h-full flex flex-col">
-            <CardHeader className="py-3 px-4 shrink-0">
+            <CardHeader className="py-3 px-4">
               <CardTitle className="text-sm font-semibold">Aksi & Pintasan Cepat</CardTitle>
               <p className="text-[11px] text-muted-foreground">
                 Pilih menu di bawah untuk langsung menuju ke halaman pengelolaan data.
               </p>
             </CardHeader>
-            <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-3 px-4 pb-4 overflow-y-auto">
+            <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-3 px-4 pb-4">
               {quickActions.map((action) => (
                 <Link
                   key={action.path}
@@ -222,9 +222,9 @@ export default function DashboardMain() {
         </div>
 
         {/* Dynamic Setup Flow Guide (1 Column) */}
-        <div className="flex flex-col min-h-0">
-          <Card className="h-full flex flex-col justify-between border-primary/20 bg-gradient-to-br from-primary/5 via-card to-card shadow-xs">
-            <CardHeader className="py-3 px-4 shrink-0">
+        <div>
+          <Card className="h-full flex flex-col border-primary/20 bg-gradient-to-br from-primary/5 via-card to-card shadow-xs">
+            <CardHeader className="py-3 px-4">
               <div className="flex items-center gap-1.5">
                 <div className="p-1 rounded bg-primary text-primary-foreground">
                   <Sparkles className="h-3 w-3" />
@@ -235,7 +235,7 @@ export default function DashboardMain() {
                 Urutan: Tahun Ajaran → Jurusan → Kelas → Guru BK
               </p>
             </CardHeader>
-            <CardContent className="space-y-2 px-4 py-0 flex-1">
+            <CardContent className="space-y-2 px-4 pb-4">
               {setupSteps.map((s, idx) => (
                 <Link
                   key={s.step}
@@ -271,7 +271,7 @@ export default function DashboardMain() {
             </CardContent>
 
             {/* Compact Admin Tip */}
-            <div className="p-2.5 mx-4 mb-3 rounded-lg bg-primary/5 border border-primary/10 text-[10px] space-y-0.5 shrink-0">
+            <div className="p-2.5 mx-4 mb-4 rounded-lg bg-primary/5 border border-primary/10 text-[10px] space-y-0.5 mt-auto">
               <div className="font-semibold text-primary flex items-center gap-1">
                 <Info className="h-3 w-3" />
                 Tips Admin

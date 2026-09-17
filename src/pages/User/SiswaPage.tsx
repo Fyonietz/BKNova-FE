@@ -311,12 +311,12 @@ export default function SiswaPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-semibold">Siswa</h2>
           <p className="text-sm text-muted-foreground">Manage student records.</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Button variant="outline" onClick={() => setImportModalOpen(true)}>
             <Upload className="mr-2 h-4 w-4" />
             Import CSV
@@ -345,12 +345,12 @@ export default function SiswaPage() {
         searchPlaceholder="Cari siswa..."
       />
 
-      <div className="flex items-center justify-between gap-3 rounded-md border bg-muted/20 px-3 py-2 text-sm text-muted-foreground">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 rounded-md border bg-muted/20 px-3 py-2 text-sm text-muted-foreground">
         <span>
           Halaman {page} / {totalPages} · {totalItems} data
         </span>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-start">
           <Button
             type="button"
             variant="outline"

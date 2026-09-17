@@ -113,7 +113,7 @@ export default function LandingPage() {
               </h1>
 
               <p className="mt-4 max-w-xl text-sm leading-relaxed text-slate-600 sm:text-base">
-                Platform BK Nova memfasilitasi instrumen <strong>AUM</strong>, <strong>Tiket Konseling</strong>, dan <strong>Kuesioner Sosiografis</strong> yang dilengkapi laporan rekapitulasi otomatis dan analisis grafik visual instan.
+                Platform BK Nova memfasilitasi instrumen <strong>AUM (Alat Ungkap Masalah)</strong> — instrumen BK untuk membantu siswa mengungkapkan permasalahan pribadi atau akademik; juga menyediakan <strong>Tiket Konseling</strong> dan <strong>Kuesioner Sosiografis</strong>, lengkap dengan rekapitulasi otomatis dan visualisasi grafik instan.
               </p>
 
               <div className="mt-7 flex flex-wrap gap-3.5">
@@ -235,8 +235,8 @@ export default function LandingPage() {
                     className="h-48 w-full object-contain transition duration-300 group-hover:scale-105"
                   />
                 </div>
-                <h3 className="mt-4 text-sm font-bold text-slate-800">Persentase Bidang & Proporsi Data</h3>
-                <p className="mt-1 text-xs text-slate-500">Visualisasi komposisi masalah siswa dan sebaran kuesioner secara efisien.</p>
+                  <h3 className="mt-4 text-sm font-bold text-slate-800">Persentase Bidang & Proporsi Data (AUM)</h3>
+                  <p className="mt-1 text-xs text-slate-500">Visualisasi komposisi masalah siswa dari hasil AUM (Alat Ungkap Masalah).</p>
               </div>
 
               {/* Gambar 2: Block Statistik */}
@@ -244,11 +244,11 @@ export default function LandingPage() {
                 <div className="overflow-hidden rounded-xl border border-slate-200 bg-white p-2">
                   <img 
                     src="/Block Statistik.png" 
-                    alt="Statistik Bar / Block BK Nova" 
+                    alt="Perbandingan kategori & kelas (AUM)" 
                     className="h-48 w-full object-contain transition duration-300 group-hover:scale-105"
                   />
                 </div>
-                <h3 className="mt-4 text-sm font-bold text-slate-800">Perbandingan Kategori & Kelas</h3>
+                <h3 className="mt-4 text-sm font-bold text-slate-800">Perbandingan Kategori & Kelas (AUM)</h3>
                 <p className="mt-1 text-xs text-slate-500">Memudahkan evaluasi komparatif hasil AUM dan keterlibatan konseling per kelas.</p>
               </div>
 
@@ -257,12 +257,12 @@ export default function LandingPage() {
                 <div className="overflow-hidden rounded-xl border border-slate-200 bg-white p-2">
                   <img 
                     src="/Line Statistik.png" 
-                    alt="Statistik Tren Line BK Nova" 
+                    alt="Tren waktu & konseling berkala (AUM)" 
                     className="h-48 w-full object-contain transition duration-300 group-hover:scale-105"
                   />
                 </div>
-                <h3 className="mt-4 text-sm font-bold text-slate-800">Tren Waktu & Konseling Berkala</h3>
-                <p className="mt-1 text-xs text-slate-500">Memantau riwayat pengajuan tiket konseling dan dinamika masalah tiap bulan.</p>
+                <h3 className="mt-4 text-sm font-bold text-slate-800">Tren Waktu & Konseling Berkala (AUM)</h3>
+                <p className="mt-1 text-xs text-slate-500">Memantau riwayat pengajuan tiket konseling dan dinamika masalah tiap bulan berdasarkan data AUM.</p>
               </div>
             </div>
           </div>
