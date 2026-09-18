@@ -14,6 +14,7 @@ import type { PaginatedResponse } from '@/types/index';
 // ─────────────────────────────────────────────
 interface Siswa {
   id?: string | number;
+  idUser?: string | number;
   idSiswa?: string | number;
   nama: string;
   nis: string;
@@ -99,9 +100,11 @@ interface ImportResultType {
 
 const getSiswaId = (row: Partial<Siswa> & Record<string, unknown>) => {
   const id =
+    row.idUser ??
     row.id ??
     row.idSiswa ??
     row.id_siswa ??
+    row.IdUser ??
     row.Id ??
     row.IdSiswa ??
     row._id;
