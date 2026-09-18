@@ -60,11 +60,17 @@ export default function DataTable<T>({
       if (!matchesGlobalSearch) return false;
 
       return activeColumnFilters.every(([key, filterValue]) => {
-        const columnValue = row[key as keyof T];
-        if (columnValue === null || columnValue === undefined) return false;
+        const col = columns.find((c) => String(c.key) === key);
 
-        const stringValue =
-          typeof columnValue === 'object' ? JSON.stringify(columnValue) : String(columnValue);
+        let stringValue: string;
+        if (col?.render) {
+          const rendered = col.render(row);
+          stringValue = typeof rendered === 'string' ? rendered : JSON.stringify(rendered);
+        } else {
+          const columnValue = row[key as keyof T];
+          if (columnValue === null || columnValue === undefined) return false;
+          stringValue = typeof columnValue === 'object' ? JSON.stringify(columnValue) : String(columnValue);
+        }
 
         return stringValue.toLowerCase().includes(filterValue.trim().toLowerCase());
       });
