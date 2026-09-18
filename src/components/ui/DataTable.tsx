@@ -35,26 +35,41 @@ export default function DataTable<T>({
   groupBy = null,
 }: DataTableProps<T>) {
   const [query, setQuery] = useState('');
+  const [columnFilters, setColumnFilters] = useState<Record<string, string>>({});
   const [rowsPerPage, setRowsPerPage] = useState(pageSize);
   const [currentPage, setCurrentPage] = useState(1);
 
   const filteredData = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
-    if (!normalizedQuery) return data;
+    const activeColumnFilters = Object.entries(columnFilters).filter(([, value]) => value.trim() !== '');
 
-    return data.filter((row) =>
-      columns.some((column) => {
-        const value = row[column.key];
+    return data.filter((row) => {
+      const matchesGlobalSearch =
+        !normalizedQuery ||
+        columns.some((column) => {
+          const value = row[column.key];
 
-        if (value === null || value === undefined) return false;
-        if (typeof value === 'object') {
-          return JSON.stringify(value).toLowerCase().includes(normalizedQuery);
-        }
+          if (value === null || value === undefined) return false;
+          if (typeof value === 'object') {
+            return JSON.stringify(value).toLowerCase().includes(normalizedQuery);
+          }
 
-        return String(value).toLowerCase().includes(normalizedQuery);
-      })
-    );
-  }, [columns, data, query]);
+          return String(value).toLowerCase().includes(normalizedQuery);
+        });
+
+      if (!matchesGlobalSearch) return false;
+
+      return activeColumnFilters.every(([key, filterValue]) => {
+        const columnValue = row[key as keyof T];
+        if (columnValue === null || columnValue === undefined) return false;
+
+        const stringValue =
+          typeof columnValue === 'object' ? JSON.stringify(columnValue) : String(columnValue);
+
+        return stringValue.toLowerCase().includes(filterValue.trim().toLowerCase());
+      });
+    });
+  }, [columns, data, columnFilters, query]);
 
   const totalPages = Math.max(1, Math.ceil(filteredData.length / rowsPerPage));
   const currentPageSafe = Math.min(currentPage, totalPages);
@@ -144,21 +159,38 @@ export default function DataTable<T>({
   return (
     <div className="overflow-hidden rounded-lg border bg-white">
       <div className="flex flex-col gap-3 border-b bg-muted/20 p-3 sm:flex-row sm:items-center sm:justify-between">
-        <label className="relative block w-full sm:max-w-sm">
-          <span className="sr-only">Cari data</span>
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <input
-            aria-label="Cari data"
-            type="search"
-            value={query}
-            onChange={(e) => {
-              setQuery(e.target.value);
-              setCurrentPage(1);
-            }}
-            placeholder={searchPlaceholder}
-            className="w-full rounded-md border border-input bg-background py-2 pl-9 pr-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          />
-        </label>
+        <div className="flex w-full flex-col gap-2 sm:max-w-xl sm:flex-row sm:items-center">
+          <label className="relative block w-full sm:max-w-sm">
+            <span className="sr-only">Cari data</span>
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <input
+              aria-label="Cari data"
+              type="search"
+              value={query}
+              onChange={(e) => {
+                setQuery(e.target.value);
+                setCurrentPage(1);
+              }}
+              placeholder={searchPlaceholder}
+              className="w-full rounded-md border border-input bg-background py-2 pl-9 pr-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            />
+          </label>
+
+          {Object.keys(columnFilters).some((key) => columnFilters[key].trim()) && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setColumnFilters({});
+                setCurrentPage(1);
+              }}
+              aria-label="Reset filter kolom"
+            >
+              Reset filter
+            </Button>
+          )}
+        </div>
 
         <label className="flex items-center gap-2 text-sm text-muted-foreground">
           <span>Baris per halaman</span>
@@ -198,6 +230,31 @@ export default function DataTable<T>({
                   {(onEdit || onDelete) && (
                     <th className="px-4 py-3 text-right font-medium">Actions</th>
                   )}
+                </tr>
+                <tr className="bg-muted/20">
+                  {columns.map((col) => {
+                    const columnKey = String(col.key);
+                    return (
+                      <th key={`${columnKey}-filter`} className="px-3 py-2 align-top">
+                        <input
+                          type="text"
+                          aria-label={`Filter kolom ${col.label}`}
+                          value={columnFilters[columnKey] ?? ''}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            setColumnFilters((prev) => ({
+                              ...prev,
+                              [columnKey]: value,
+                            }));
+                            setCurrentPage(1);
+                          }}
+                          placeholder={`Filter ${col.label}`}
+                          className="w-full rounded-md border border-input bg-background px-2 py-1.5 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        />
+                      </th>
+                    );
+                  })}
+                  {(onEdit || onDelete) && <th className="px-3 py-2 text-right" />}
                 </tr>
               </thead>
               <tbody className="divide-y">
