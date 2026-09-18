@@ -1,5 +1,5 @@
 // src/components/ui/DataTable.tsx
-import { useMemo, useState } from 'react';
+import { Fragment, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { ChevronLeft, ChevronRight, Pencil, Search, Trash2 } from 'lucide-react';
 
@@ -19,6 +19,7 @@ interface DataTableProps<T> {
   searchPlaceholder?: string;
   pageSize?: number;
   pageSizeOptions?: number[];
+  groupBy?: keyof T | null;
 }
 
 export default function DataTable<T>({
@@ -31,6 +32,7 @@ export default function DataTable<T>({
   searchPlaceholder = 'Cari data...',
   pageSize = 10,
   pageSizeOptions = [5, 10, 20, 50],
+  groupBy = null,
 }: DataTableProps<T>) {
   const [query, setQuery] = useState('');
   const [rowsPerPage, setRowsPerPage] = useState(pageSize);
@@ -62,8 +64,78 @@ export default function DataTable<T>({
     return filteredData.slice(startIndex, startIndex + rowsPerPage);
   }, [currentPageSafe, filteredData, rowsPerPage]);
 
+  const groupedRows = useMemo(() => {
+    if (!groupBy) return null;
+
+    const groups = new Map<string, { label: string; rows: T[] }>();
+
+    paginatedData.forEach((row) => {
+      const value = row[groupBy];
+      const groupKey = value == null ? 'empty' : typeof value === 'object' ? JSON.stringify(value) : String(value);
+      const label = value == null ? 'Tidak ada nilai' : typeof value === 'object' ? JSON.stringify(value) : String(value);
+
+      if (!groups.has(groupKey)) {
+        groups.set(groupKey, { label, rows: [] });
+      }
+
+      groups.get(groupKey)?.rows.push(row);
+    });
+
+    return Array.from(groups.values());
+  }, [groupBy, paginatedData]);
+
   const startItem = filteredData.length === 0 ? 0 : (currentPageSafe - 1) * rowsPerPage + 1;
   const endItem = Math.min(currentPageSafe * rowsPerPage, filteredData.length);
+
+  const renderTableRow = (row: T) => {
+    const rowId = getRowId(row);
+
+    return (
+      <tr key={String(rowId || 'row')} className="hover:bg-muted/30">
+        {columns.map((col) => (
+          <td key={String(col.key)} className="px-4 py-3 align-top">
+            {col.render ? col.render(row) : String(row[col.key] ?? '')}
+          </td>
+        ))}
+        {(onEdit || onDelete) && (
+          <td className="space-x-1 px-4 py-3 text-right">
+            {onEdit && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => {
+                  if (rowId === undefined || rowId === null || rowId === '') {
+                    console.warn('DataTable: attempted edit for row without a valid id', row);
+                    return;
+                  }
+                  onEdit(row);
+                }}
+                aria-label={`Edit ${String(rowId ?? 'data')}`}
+              >
+                <Pencil className="h-4 w-4" />
+              </Button>
+            )}
+            {onDelete && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => {
+                  if (rowId === undefined || rowId === null || rowId === '') {
+                    console.warn('DataTable: attempted delete for row without a valid id', row);
+                    return;
+                  }
+                  onDelete(row);
+                }}
+                aria-label={`Hapus ${String(rowId ?? 'data')}`}
+              >
+                <Trash2 className="h-4 w-4 text-destructive" />
+              </Button>
+            )}
+          </td>
+        )}
+      </tr>
+    );
+  };
 
   if (isLoading) {
     return <div className="py-10 text-center text-sm text-muted-foreground">Loading...</div>;
@@ -129,29 +201,24 @@ export default function DataTable<T>({
                 </tr>
               </thead>
               <tbody className="divide-y">
-                {paginatedData.map((row) => (
-                  <tr key={String(getRowId(row))} className="hover:bg-muted/30">
-                    {columns.map((col) => (
-                      <td key={String(col.key)} className="px-4 py-3 align-top">
-                        {col.render ? col.render(row) : String(row[col.key] ?? '')}
-                      </td>
-                    ))}
-                    {(onEdit || onDelete) && (
-                      <td className="space-x-1 px-4 py-3 text-right">
-                        {onEdit && (
-                          <Button variant="ghost" size="icon" onClick={() => onEdit(row)} aria-label={`Edit ${String(getRowId(row))}`}>
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                        )}
-                        {onDelete && (
-                          <Button variant="ghost" size="icon" onClick={() => onDelete(row)} aria-label={`Hapus ${String(getRowId(row))}`}>
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
-                        )}
-                      </td>
-                    )}
-                  </tr>
-                ))}
+                {groupBy && groupedRows ? (
+                  groupedRows.map((group) => (
+                    <Fragment key={group.label}>
+                      <tr className="bg-muted/30 text-left">
+                        <th
+                          scope="rowgroup"
+                          colSpan={columns.length + (onEdit || onDelete ? 1 : 0)}
+                          className="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground"
+                        >
+                          {group.label}
+                        </th>
+                      </tr>
+                      {group.rows.map((row) => renderTableRow(row))}
+                    </Fragment>
+                  ))
+                ) : (
+                  paginatedData.map((row) => renderTableRow(row))
+                )}
               </tbody>
             </table>
           </div>

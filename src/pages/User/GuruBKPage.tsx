@@ -281,6 +281,7 @@ export default function GuruBKPage() {
           data={bkList}
           isLoading={isLoading}
           getRowId={(row) => row.id}
+          groupBy="role"
         />
       </div>
 

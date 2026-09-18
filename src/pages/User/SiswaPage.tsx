@@ -96,6 +96,11 @@ interface ImportResultType {
   failed: ImportFailed[];
 }
 
+const getSiswaId = (row: Partial<Siswa> & Record<string, unknown>) => {
+  const id = row.id ?? row.id_siswa ?? row.Id ?? row._id;
+  return id === undefined || id === null || id === '' ? null : String(id);
+};
+
 export default function SiswaPage() {
   const [siswa, setSiswa] = useState<Siswa[]>([]);
   const [kelasList, setKelasList] = useState<KelasOption[]>([]);
@@ -165,7 +170,13 @@ export default function SiswaPage() {
   };
 
   const openEditModal = (row: Siswa) => {
-    setEditingId(row.id);
+    const rowId = getSiswaId(row as Partial<Siswa> & Record<string, unknown>);
+    if (!rowId) {
+      setError('Data siswa tidak memiliki ID yang valid.');
+      return;
+    }
+
+    setEditingId(rowId);
     setForm({
       nama: row.nama || '',
       password: '',
@@ -227,9 +238,15 @@ export default function SiswaPage() {
   };
 
   const handleDelete = async (row: Siswa) => {
+    const rowId = getSiswaId(row as Partial<Siswa> & Record<string, unknown>);
+    if (!rowId) {
+      setError('Data siswa tidak memiliki ID yang valid untuk dihapus.');
+      return;
+    }
+
     if (!confirm(`Delete ${row.nama}?`)) return;
     try {
-      await api.delete(`/api/v1/siswa/${row.id}`);
+      await api.delete(`/api/v1/siswa/${rowId}`);
       fetchData();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Failed to delete siswa.');
@@ -338,11 +355,12 @@ export default function SiswaPage() {
         columns={columns}
         data={siswa}
         isLoading={isLoading}
-        getRowId={(row) => row.id}
+        getRowId={(row) => getSiswaId(row as Partial<Siswa> & Record<string, unknown>) ?? ''}
         onEdit={openEditModal}
         onDelete={handleDelete}
         pageSize={pageSize}
         searchPlaceholder="Cari siswa..."
+        groupBy="kelas"
       />
 
       <div className="flex flex-col sm:flex-row items-center justify-between gap-3 rounded-md border bg-muted/20 px-3 py-2 text-sm text-muted-foreground">
