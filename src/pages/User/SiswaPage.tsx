@@ -13,7 +13,8 @@ import type { PaginatedResponse } from '@/types/index';
 // 1. ENTITY SHAPES
 // ─────────────────────────────────────────────
 interface Siswa {
-  id: string;
+  id?: string | number;
+  idSiswa?: string | number;
   nama: string;
   nis: string;
   nisn: string;
@@ -97,7 +98,14 @@ interface ImportResultType {
 }
 
 const getSiswaId = (row: Partial<Siswa> & Record<string, unknown>) => {
-  const id = row.id ?? row.id_siswa ?? row.Id ?? row._id;
+  const id =
+    row.id ??
+    row.idSiswa ??
+    row.id_siswa ??
+    row.Id ??
+    row.IdSiswa ??
+    row._id;
+
   return id === undefined || id === null || id === '' ? null : String(id);
 };
 
